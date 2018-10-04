@@ -7,7 +7,7 @@ extern "C" {
 
 #define COMMAND_STR_SIZE 10
 #define KEY_STR_SIZE 10
-#define VALUE_STR_SIZE 10
+#define VALUE_STR_SIZE 32
 
 #define REGISTER_SIZE 10
 
