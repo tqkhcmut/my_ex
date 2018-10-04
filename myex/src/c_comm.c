@@ -3,7 +3,8 @@
 #define C_COMM_DEBUG 0
 
 #ifdef C_COMM_DEBUG
-#include <stdio.h>
+//#include <stdio.h>
+#include "usart.h"
 #endif
 #include <string.h>
 
@@ -31,14 +32,16 @@ int c_comm_analyze(char * line)
 	if (last == NULL || last - first >= COMMAND_STR_SIZE)
 	{
 #ifdef C_COMM_DEBUG
-		printf("\r\nERROR: Command input out of size\r\n");
+//		printf("\r\nERROR: Command input out of size\r\n");
+		USART1_sendStr("\r\nERROR: Command input out of size\r\n");
 #endif
 		return -1;
 	}
 	else
 	{
 #ifdef C_COMM_DEBUG
-		printf("\r\nCopy command to buffer.\r\n");
+//		printf("\r\nCopy command to buffer.\r\n");
+		USART1_sendStr("\r\nCopy command to buffer.\r\n");
 #endif
 		memcpy(__cmd, first, last - first);
 		first = last + 1;
@@ -48,7 +51,8 @@ int c_comm_analyze(char * line)
 	if (last == NULL || last - first >= KEY_STR_SIZE)
 	{
 #ifdef C_COMM_DEBUG
-		printf("\r\nERROR: Key input out of size\r\n");
+//		printf("\r\nERROR: Key input out of size\r\n");
+		USART1_sendStr("\r\nERROR: Key input out of size\r\n");
 #endif
 		memset(__cmd, 0, COMMAND_STR_SIZE);
 		return -1;
@@ -56,7 +60,8 @@ int c_comm_analyze(char * line)
 	else
 	{
 #ifdef C_COMM_DEBUG
-		printf("\r\nCopy key to buffer.\r\n");
+//		printf("\r\nCopy key to buffer.\r\n");
+		USART1_sendStr("\r\nCopy key to buffer.\r\n");
 #endif
 		memcpy(__key, first, last - first);
 		first = last + 1;
@@ -66,7 +71,8 @@ int c_comm_analyze(char * line)
 	if (last == NULL || last - first >= VALUE_STR_SIZE)
 	{
 #ifdef C_COMM_DEBUG
-		printf("\r\nERROR: Value input out of size\r\n");
+//		printf("\r\nERROR: Value input out of size\r\n");
+		USART1_sendStr("\r\nERROR: Value input out of size\r\n");
 #endif
 		memset(__cmd, 0, COMMAND_STR_SIZE);
 		memset(__key, 0, KEY_STR_SIZE);
@@ -75,14 +81,22 @@ int c_comm_analyze(char * line)
 	else
 	{
 #ifdef C_COMM_DEBUG
-		printf("\r\nCopy value to buffer.\r\n");
+//		printf("\r\nCopy value to buffer.\r\n");
+		USART1_sendStr("\r\nCopy value to buffer.\r\n");
 #endif
 		memcpy(__val, first, last - first);
 		first = last + 1;
 	}
 
 #ifdef C_COMM_DEBUG
-	printf("\r\nCommand: %s\r\nKey: %s\r\nValue: %s\r\n", __cmd, __key, __val);
+//	printf("\r\nCommand: %s\r\nKey: %s\r\nValue: %s\r\n", __cmd, __key, __val);
+	USART1_sendStr("\r\nCommand: ");
+	USART1_sendStr(__cmd);
+	USART1_sendStr("\r\nKey: ");
+	USART1_sendStr(__key);
+	USART1_sendStr("\r\nValue: ");
+	USART1_sendStr(__val);
+	USART1_sendStr("\r\n");
 #endif
 
 	return 0;
@@ -104,7 +118,10 @@ int c_comm_register(struct c_comm cmd_list[])
 		if (strlen(cmd_list[i].command) >= COMMAND_STR_SIZE)
 		{
 #ifdef C_COMM_DEBUG
-			printf("\r\nERROR: Command \"%s\" had length out of range.\r\n", cmd_list[i].command);
+//			printf("\r\nERROR: Command \"%s\" had length out of range.\r\n", cmd_list[i].command);
+			USART1_sendStr("\r\nERROR: Command \"");
+			USART1_sendStr(cmd_list[i].command);
+			USART1_sendStr("\" had length out of range.\r\n");
 #endif
 			return -1;
 		}
@@ -146,12 +163,16 @@ int c_comm_process(char * line)
 					if (memcmp(__register_list[i][j].command, __cmd, strlen(__cmd)) == 0)
 					{
 #ifdef C_COMM_DEBUG
-						printf("\r\nFound command \"%s\"\r\n", __cmd);
+//						printf("\r\nFound command \"%s\"\r\n", __cmd);
+						USART1_sendStr("\r\nFound command \"");
+						USART1_sendStr(__cmd);
+						USART1_sendStr("\"\r\n");
 #endif
 						if (__register_list[i][j].action != NULL)
 						{
 #ifdef C_COMM_DEBUG
-							printf("\r\nExecute action\r\n", __cmd);
+//							printf("\r\nExecute action\r\n");
+							USART1_sendStr("\r\nExecute action\r\n");
 #endif
 							__register_list[i][j].action(__key, __val);
 						}
@@ -163,14 +184,18 @@ int c_comm_process(char * line)
 		}
 
 #ifdef C_COMM_DEBUG
-		printf("\r\nERROR: Command \"%s\" not regitered.\r\n", __cmd);
+//		printf("\r\nERROR: Command \"%s\" not regitered.\r\n", __cmd);
+		USART1_sendStr("\r\nERROR: Command \"");
+		USART1_sendStr(__cmd);
+		USART1_sendStr("\" not regitered.\r\n");
 #endif
 		return -1;
 	}
 	else
 	{
 #ifdef C_COMM_DEBUG
-		printf("\r\nERROR: Communication process failed.\r\n");
+//		printf("\r\nERROR: Communication process failed.\r\n");
+		USART1_sendStr("\r\nERROR: Communication process failed.\r\n");
 #endif
 		return -1;
 	}
