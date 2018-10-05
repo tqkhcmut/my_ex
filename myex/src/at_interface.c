@@ -26,6 +26,9 @@ int __read_len = 0;
 #include <string.h>
 #include <stdlib.h>
 
+/* enhance command processing */
+#include "c_comm.h"
+
 /* public variables for configuration */
 struct GPRS_Profile at_int_gprs_profile =
 {
@@ -154,7 +157,7 @@ int at_sms_send(char * sms, char * des_number)
 	at_serial_waitline(__buffer, BUFFER_SIZE, "OK", 10000);	
 	return 0;
 }
-int at_sms_write(char * sms, char * des_number) /* resturn stored index */
+int at_sms_write(char * sms, char * des_number) /* return stored index */
 {
 	memset(__sprintf_buff, 0, BUFFER_SIZE);
 	sprintf(__sprintf_buff, "AT+CMGW=%s", des_number);
@@ -239,7 +242,7 @@ int at_gprs_release(int pdp_context)
 /* TCP */
 int at_tcp_connect(char * server, int port)
 {
-	/** TCP initialation **/
+	/** TCP initialization **/
 	memset(__sprintf_buff, 0, BUFFER_SIZE);
 	sprintf(__sprintf_buff, "AT+CIPMUX=0");
 	at_serial_send_cmd(__sprintf_buff);
@@ -249,7 +252,7 @@ int at_tcp_connect(char * server, int port)
 	sprintf(__sprintf_buff, "AT+CIPQSEND=0");
 	at_serial_send_cmd(__sprintf_buff);
 	at_serial_waitline(__buffer, BUFFER_SIZE, "OK", 10000);	
-	/** END TCP initialation **/
+	/** END TCP initialization **/
 	
 	memset(__sprintf_buff, 0, BUFFER_SIZE);
 	sprintf(__sprintf_buff, "AT+CIPSTART=\"TCP\",\"%s\",\"%d\"", server, port);
@@ -346,107 +349,73 @@ int at_gnss_process(void)
 	return 0;
 }
 
-/* Reconfiguration parameter:
- * server address
- * server port
- * GPRS pdp context
- * GPRS apn
- * GPRS user
- * GPRS pass
- *
- * Work with debug port only
- */
-int at_reconfig_process(void)
+int set_config(const char * key, const char * value)
 {
 	char flash_update = 0;
 
-	if (USART1_Available())
+	if (memcmp(key, "server", 6) == 0)
 	{
-		USART1_readline(__location_buff, BUFFER_SIZE - 1);
-		/* Config Server: sample.com 1234 */
-		if (memcmp(__location_buff, "Config Server: ", 15) == 0)
-		{
-			char * first, * end;
-			first = strchr(__location_buff, ' ');
-			if (first > 0 && first < BUFFER_SIZE)
-			{
-				end = strchr(first + 1, ' ');
-				if (end > 0 && end < BUFFER_SIZE)
-				{
-					// copy server address
-					if (end - first < 64)
-					{
-						memset(at_int_server.address, 0, 64);
-						memcpy(at_int_server.address, first + 1, end - first);
-						flash_update = 1;
-					}
-					else
-					{
-						USART1_sendStr("Invalid address length\r\n");
-						return -1;
-					}
-				}
-				else
-				{
-					USART1_sendStr("Wrong format\r\n");
-					return -1;
-				}
-			}
-			else
-			{
-				USART1_sendStr("Wrong format\r\n");
-				return -1;
-			}
 
-			first = strchr(end + 1, ' ');
-			if (first > 0 && first < BUFFER_SIZE)
-			{
-				end = strchr(first, '\n');
-				if (end > 0 && end < BUFFER_SIZE)
-				{
-					if (*(end - 1) == '\r')
-					{
-						end--;
-					}
-					// copy server address
-					if (end - first < 7)
-					{
-						char port_str[8];
-						memset(port_str, 0, 8);
-						memcpy(port_str, first + 1, end - first);
-						at_int_server.port = atoi(port_str);
-						flash_update = 1;
-					}
-					else
-					{
-						USART1_sendStr("Invalid port length\r\n");
-						return -1;
-					}
-				}
-				else
-				{
-					USART1_sendStr("Wrong format\r\n");
-					return -1;
-				}
-			}
-			else
-			{
-				USART1_sendStr("Wrong format\r\n");
-				return -1;
-			}
+	}
+	if (memcmp(key, "port", 6) == 0)
+	{
 
-		}
-		/* Config GPRS: pdp apn user pass */
-		if (memcmp(__location_buff, "Config GPRS: ", 13) == 0)
-		{
+	}
+	if (memcmp(key, "pdp", 6) == 0)
+	{
 
-		}
+	}
+	if (memcmp(key, "apn", 6) == 0)
+	{
+
+	}
+	if (memcmp(key, "pass", 6) == 0)
+	{
+
+	}
+	if (memcmp(key, "user", 6) == 0)
+	{
+
 	}
 
 	if (flash_update == 1)
 	{
 		// @TODO: update to flash here
 	}
+
+	return 0;
+}
+
+struct c_comm configs[] =
+{
+		{"config", set_config},
+		{NULL, NULL},
+};
+
+int at_cmds_init(void)
+{
+	return c_comm_register(configs);
+}
+
+/* Reconfiguration parameter:
+config:server=sample.com\r
+config:port=1234\r
+config:pdp=1\r
+config:apn=v-internet\r
+config:user=\r
+config:pass=\r
+ *
+ * Work with debug port only
+ */
+int at_reconfig_process(void)
+{
+	if (USART1_Available())
+	{
+		USART1_readline(__location_buff, BUFFER_SIZE - 1);
+		c_comm_process(__location_buff);
+	}
+
+	/* @NOTE: no delaying here */
 
 	return 0;
 }
