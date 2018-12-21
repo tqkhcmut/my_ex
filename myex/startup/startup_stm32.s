@@ -111,7 +111,6 @@ Infinite_Loop:
   .type g_pfnVectors, %object
   .size g_pfnVectors, .-g_pfnVectors
 
-
 g_pfnVectors:
   .word _estack
   .word Reset_Handler
@@ -124,11 +123,11 @@ g_pfnVectors:
   .word	0
   .word	0
   .word	0
-  .word	SVC_Handler
+  .word	vPortSVCHandler
   .word	DebugMon_Handler
   .word	0
-  .word	PendSV_Handler
-  .word	SysTick_Handler
+  .word	xPortPendSVHandler
+  .word	xPortSysTickHandler
   .word	WWDG_IRQHandler          			/* Window Watchdog interrupt                           */
   .word	PVD_IRQHandler           			/* PVD through EXTI line detection interrupt           */
   .word	TAMPER_IRQHandler        			/* Tamper interrupt                                    */
